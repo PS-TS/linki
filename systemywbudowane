@@ -20,3 +20,30 @@ int main() {
     }
     return (0);
 }
+
+#include "p24FJ128GA010.h"
+/*
+ * 
+ */
+int main() {
+    LATA = 0;
+    TRISA = 0;
+    TRISDbits.TRISD6 = 1;
+    TRISDbits.TRISD13 = 1;
+    int przerwanie = 0;
+    unsigned int program = 1;
+    while (1) {
+        if (PORTDbits.RD6 == 1) {
+            program=program+1;
+            
+        }    
+        if (PORTDbits.RD13 == 1) {
+            if(program>0)
+                program=program-1;
+            
+        }
+        LATA = program;
+    }
+
+    return 0;
+}

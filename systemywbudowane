@@ -13,7 +13,12 @@ int main() {
     TRISA = 0;
     TRISDbits.TRISD6 = 1;
     TRISDbits.TRISD13 = 1;
-    unsigned int program = 3;
+    
+    unsigned int program = 6;
+    unsigned int jedn;
+    unsigned int dzies;
+    unsigned int wynik;
+    
     while (1) {
         if (PORTDbits.RD6 == 0) {
             program=(program+1)%9;
@@ -57,13 +62,41 @@ int main() {
                 }
                 break;
             case 4:
-                LATA=31;
+                jedn = 0;
+                dzies = 0;
+                for (unsigned int i = 0; i<100;i++){
+                    jedn=i%10;
+                    dzies=i/10;
+                    wynik=(dzies*16)+jedn;
+                    LATA=wynik;
+                    for(unsigned j = 0; j<65000;j++);
+                }
+                    
                 break;
             case 5:
-                LATA=63;
+                jedn = 9;
+                dzies = 9;
+                for (unsigned int i = 99; i>=0;i--){
+                    jedn=i%10;
+                    dzies=i/10;
+                    wynik=(dzies*16)+jedn;
+                    LATA=wynik;
+                    for(unsigned j = 0; j<65000;j++);
+                }
                 break;
             case 6:
-                LATA=127;
+                wynik=7;
+                LATA=wynik;
+                for (unsigned int i = 0; i<5;i++){
+                    wynik=wynik<<1;
+                    LATA=wynik;
+                    for(unsigned j = 0; j<65000;j++);
+                }
+                for (unsigned int i = 0; i<5;i++){
+                    wynik=wynik>>1;
+                    LATA=wynik;
+                    for(unsigned j = 0; j<65000;j++);
+                }
                 break;
             case 7:
                 LATA=65;

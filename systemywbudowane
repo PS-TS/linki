@@ -16,7 +16,6 @@ void __attribute__((interrupt)) _CNInterrupt(void)
     LATA=0;
     if (PORTDbits.RD6 == 0) {
         program = (program + 1) % 9;
-        // Simple debounce delay (optional)
         for (volatile int i = 0; i < 10000; i++);
     } 
     else if (PORTDbits.RD13 == 0) {
@@ -27,7 +26,7 @@ void __attribute__((interrupt)) _CNInterrupt(void)
         for (volatile int i = 0; i < 10000; i++);
     }
 
-    IFS1bits.CNIF = 0; // Clear CN interrupt flag
+    IFS1bits.CNIF = 0;
 }
 
 int main() {
@@ -39,88 +38,104 @@ int main() {
     CNEN2bits.CN19IE = 1;  // Enable CN19 (RD13)
     IEC1bits.CNIE = 1;     // Enable CN interrupts
     IFS1bits.CNIF = 0;     // Clear CN interrupt flag
-    unsigned int jedn;
-    unsigned int dzies;
-    unsigned int wynik;
     
     while (1) {
+    // Define static variables to keep state between loop iterations
+        static unsigned int i = 0;
+        static unsigned int j = 0;
+        static unsigned int jedn = 0;
+        static unsigned int dzies = 0;
+        static unsigned int wynik = 0;
+        static unsigned int inner_delay = 0;
+
         switch(program) {
             case 0:
-                for(unsigned int i = 0x0000; i<=0x00FF;i++)
-                {
-                    LATA=i;
-                    for(unsigned j = 0; j<65000;j++);
-                }
+                // Incremental up-counter
+                LATA = i;
+                // Simple delay (replace with timer for better accuracy)
+                for (inner_delay = 0; inner_delay < 65000; inner_delay++);
+                i++;
+                if (i > 0x00FF) i = 0;
                 break;
+
             case 1:
-                for(unsigned int i = 0x00FF; i>=0x0000;i--)
-                {
-                    LATA=i;
-                    for(unsigned j = 0; j<65000;j++);
-                }
+                // Incremental down-counter
+                LATA = i;
+                for (inner_delay = 0; inner_delay < 65000; inner_delay++);
+                if (i == 0) i = 0x00FF;
+                else i--;
                 break;
+
             case 2:
-                for(unsigned int i = 0x0000; i<=0x00FF;i++)
-                {
-                    LATA=i ^ (i >> 1);
-                    for(unsigned j = 0; j<65000;j++);
-                }
+                // Gray code up
+                LATA = i ^ (i >> 1);
+                for (inner_delay = 0; inner_delay < 65000; inner_delay++);
+                i++;
+                if (i > 0x00FF) i = 0;
                 break;
+
             case 3:
-                for(unsigned int i = 0x00FF; i>=0x0000;i--)
-                {
-                    LATA=i ^ (i >> 1);
-                    for(unsigned j = 0; j<65000;j++);
-                }
+                // Gray code down
+                LATA = i ^ (i >> 1);
+                for (inner_delay = 0; inner_delay < 65000; inner_delay++);
+                if (i == 0) i = 0x00FF;
+                else i--;
                 break;
+
             case 4:
-                jedn = 0;
-                dzies = 0;
-                for (unsigned int i = 0; i<100;i++){
-                    jedn=i%10;
-                    dzies=i/10;
-                    wynik=(dzies*16)+jedn;
-                    LATA=wynik;
-                    for(unsigned j = 0; j<65000;j++);
-                }
-                    
+                // BCD up
+                jedn = i % 10;
+                dzies = i / 10;
+                wynik = (dzies * 16) + jedn;
+                LATA = wynik;
+                for (inner_delay = 0; inner_delay < 65000; inner_delay++);
+                i++;
+                if (i >= 100) i = 0;
                 break;
+
             case 5:
-                jedn = 9;
-                dzies = 9;
-                for (unsigned int i = 99; i>=0;i--){
-                    jedn=i%10;
-                    dzies=i/10;
-                    wynik=(dzies*16)+jedn;
-                    LATA=wynik;
-                    for(unsigned j = 0; j<65000;j++);
-                }
+                // BCD down
+                jedn = i % 10;
+                dzies = i / 10;
+                wynik = (dzies * 16) + jedn;
+                LATA = wynik;
+                for (inner_delay = 0; inner_delay < 65000; inner_delay++);
+                if (i == 0) i = 99;
+                else i--;
                 break;
+
             case 6:
-                wynik=7;
-                LATA=wynik;
-                for (unsigned int i = 0; i<5;i++){
-                    wynik=wynik<<1;
-                    LATA=wynik;
-                    for(unsigned j = 0; j<65000;j++);
-                }
-                for (unsigned int i = 0; i<5;i++){
-                    wynik=wynik>>1;
-                    LATA=wynik;
-                    for(unsigned j = 0; j<65000;j++);
+                // Bit shift left then right
+                LATA = wynik;
+                for (inner_delay = 0; inner_delay < 65000; inner_delay++);
+                if (i < 5) {
+                    wynik <<= 1;
+                    i++;
+                } else if (i < 10) {
+                    wynik >>= 1;
+                    i++;
+                } else {
+                    wynik = 7;
+                    i = 0;
                 }
                 break;
+
             case 7:
-                LATA=65;
+                LATA = 65;
+                i = 0; // reset state variables
                 break;
+
             case 8:
-                LATA=81;
+                LATA = 81;
+                i = 0; // reset state variables
                 break;
+
             default:
-                LATA=255;
+                LATA = 255;
+                i = 0; // reset state variables
                 break;
-        
         }
+
     }
 
     return 0;

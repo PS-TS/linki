@@ -5,33 +5,45 @@
  * Created on March 24, 2025, 10:34 AM
  */
 #include "p24FJ128GA010.h"
-/*
- * 
- */
+
+volatile unsigned int program = 0;
+volatile unsigned char bitCounter = 0x0;
+
+void __attribute__((interrupt)) _CNInterrupt(void)
+{
+    for (volatile int i = 0; i < 10000; i++);
+    bitCounter = 0x0;
+    LATA=0;
+    if (PORTDbits.RD6 == 0) {
+        program = (program + 1) % 9;
+        // Simple debounce delay (optional)
+        for (volatile int i = 0; i < 10000; i++);
+    } 
+    else if (PORTDbits.RD13 == 0) {
+        if (program == 0)
+            program = 8;
+        else
+            program = program - 1;
+        for (volatile int i = 0; i < 10000; i++);
+    }
+
+    IFS1bits.CNIF = 0; // Clear CN interrupt flag
+}
+
 int main() {
     LATA = 0;
     TRISA = 0;
     TRISDbits.TRISD6 = 1;
     TRISDbits.TRISD13 = 1;
-    
-    unsigned int program = 6;
+    CNEN1bits.CN15IE = 1;  // Enable CN15 (RD6)
+    CNEN2bits.CN19IE = 1;  // Enable CN19 (RD13)
+    IEC1bits.CNIE = 1;     // Enable CN interrupts
+    IFS1bits.CNIF = 0;     // Clear CN interrupt flag
     unsigned int jedn;
     unsigned int dzies;
     unsigned int wynik;
     
     while (1) {
-        if (PORTDbits.RD6 == 0) {
-            program=(program+1)%9;
-            while(PORTDbits.RD6 == 0);
-        }    
-        if (PORTDbits.RD13 == 0) {
-            if(program == 0)
-                program = 8;
-            else
-                program=(program-1);
-            while(PORTDbits.RD13 == 0); 
-        }
-        
         switch(program) {
             case 0:
                 for(unsigned int i = 0x0000; i<=0x00FF;i++)
@@ -113,4 +125,3 @@ int main() {
 
     return 0;
 }
-

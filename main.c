@@ -48,7 +48,7 @@ int main() {
         static unsigned int jedn = 0;
         static unsigned int dzies = 0;
         static unsigned int wynik = 0;
-        static unsigned int seed = 638;
+        static unsigned int seed = 115;
         static unsigned int inner_delay = 0;
         static unsigned int previousProgram = 0xFFFF;
         
@@ -203,7 +203,7 @@ int main() {
 
             case 8:
                 seed = (1103515245 * seed + 12345) & 0x7fffffff;
-                LATA = seed % 256;
+                LATA = seed % 64;
                 for (inner_delay = 0; inner_delay < 65000; inner_delay++);
                 for (inner_delay = 0; inner_delay < 65000; inner_delay++);
                 for (inner_delay = 0; inner_delay < 65000; inner_delay++);

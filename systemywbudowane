@@ -48,6 +48,7 @@ int main() {
         static unsigned int jedn = 0;
         static unsigned int dzies = 0;
         static unsigned int wynik = 0;
+        static unsigned int seed = 638;
         static unsigned int inner_delay = 0;
         static unsigned int previousProgram = 0xFFFF;
         
@@ -85,9 +86,9 @@ int main() {
 
                 case 7:  // Your custom pattern
                     i = 0;
-                    j = 7;      // example initial value, adjust as needed
+                    j = 8;      // example initial value, adjust as needed
                     x = 1;
-                    wynik = 1;
+                    wynik = 0;
                     break;
 
                 case 8:  // Fixed output
@@ -163,7 +164,7 @@ int main() {
             case 6:
                 // Bit shift left then right
                 LATA = wynik;
-                for (inner_delay = 0; inner_delay < 65000; inner_delay++);
+                for (inner_delay = 0; inner_delay < 35000; inner_delay++);
                 if (i < 5) {
                     wynik <<= 1;
                     i++;
@@ -194,15 +195,18 @@ int main() {
                     }
                 }
                 else{
-                    j=7;
-                    wynik = 1;
+                    j=8;
+                    wynik = 0;
                     x=1;
                 }
                 break;
 
             case 8:
-                LATA = 128;
-                i = 0; // reset state variables
+                seed = (1103515245 * seed + 12345) & 0x7fffffff;
+                LATA = seed % 256;
+                for (inner_delay = 0; inner_delay < 65000; inner_delay++);
+                for (inner_delay = 0; inner_delay < 65000; inner_delay++);
+                for (inner_delay = 0; inner_delay < 65000; inner_delay++);
                 break;
 
             default:

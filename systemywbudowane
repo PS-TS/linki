@@ -168,7 +168,7 @@ int main() {
                 if (i < 5) {
                     wynik <<= 1;
                     i++;
-                } else if (i < 10) {
+                } else if (i < 9) {
                     wynik >>= 1;
                     i++;
                 } else {

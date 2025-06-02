@@ -1,0 +1,81 @@
+/* 
+ * File:   main.c
+ * Author: local
+ *
+ * Created on March 24, 2025, 10:34 AM
+ */
+#include "p24FJ128GA010.h"
+#include "lcd.c"
+#include "lcd.h"
+
+volatile unsigned int program = 0;
+volatile unsigned char bitCounter = 0x0;
+
+void __attribute__((interrupt)) _CNInterrupt(void)
+{
+    for (volatile int i = 0; i < 10000; i++);
+    bitCounter = 0x0;
+    LATA=0;
+    if (PORTDbits.RD13 == 0) {
+        program = (program + 1) % 9;
+        for (volatile int i = 0; i < 10000; i++);
+    } 
+    else if (PORTDbits.RD6 == 0) {
+        if (program == 0)
+            program = 8;
+        else
+            program = program - 1;
+        for (volatile int i = 0; i < 10000; i++);
+    }
+
+    IFS1bits.CNIF = 0;
+}
+
+void ADCconfig(void)
+{
+    AD1CON1bits.FORM = 0;         // Integer format
+    AD1CON1bits.SSRC = 0x7;       // Auto convert
+    AD1CON1bits.ASAM = 1;         // Auto sample
+ 
+    AD1CON3bits.ADRC = 0;         // System clock
+    AD1CON3bits.SAMC = 2;         // Sample time
+    AD1CON3bits.ADCS = 20;        // Conversion clock
+ 
+    AD1CHSbits.CH0SA = 5;         // Use AN5
+ 
+    AD1PCFGbits.PCFG0 = 0;        // Set AN0 to analog
+    TRISBbits.TRISB0 = 1;         // RB0 input
+ 
+    AD1CON1bits.ADON = 1;         // Turn on ADC
+}
+
+
+int main() {
+    LATA = 0;
+    TRISA = 0;
+    ADCconfig();     // Configure ADC once
+    TRISDbits.TRISD6 = 1;
+    TRISDbits.TRISD7 = 1;
+    TRISDbits.TRISD13 = 1;
+    CNEN1bits.CN15IE = 1;  // Enable CN15 (RD6)
+    CNEN2bits.CN16IE = 1;  // Enable CN16 (RD7)
+    CNEN2bits.CN19IE = 1;  // Enable CN19 (RD13)
+    IEC1bits.CNIE = 1;     // Enable CN interrupts
+    IFS1bits.CNIF = 0;     // Clear CN interrupt flag
+    uint16_t i=0;
+    LCD_Initialize();
+    LCD-ClearScreen();
+    LCD_PutString("Timer", 5);
+        LCD_ShiftCursorDown();
+        for(i=0;i<5;i++)
+            LCD_ShiftCursorLeft();
+        LCD_PutString("00:00", 4);
+    while (1) {
+        
+        
+        
+
+    }
+
+    return 0;
+}

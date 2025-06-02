@@ -7,6 +7,7 @@
 #include "p24FJ128GA010.h"
 #include "lcd.c"
 #include "lcd.h"
+#include <stdio.h>
 
 volatile unsigned int program = 0;
 volatile unsigned char bitCounter = 0x0;
@@ -63,16 +64,44 @@ int main() {
     IEC1bits.CNIE = 1;     // Enable CN interrupts
     IFS1bits.CNIF = 0;     // Clear CN interrupt flag
     uint16_t i=0;
+    uint16_t minutes=10;
+    uint16_t seconds=60;
+    bool work=0;
     LCD_Initialize();
-    LCD-ClearScreen();
+    LCD_ClearScreen();
     LCD_PutString("Timer", 5);
+    LCD_ShiftCursorDown();
+    for(i=0;i<5;i++)
+        LCD_ShiftCursorLeft();
+    LCD_PutString("00:00", 5);
+    char str[12];
+    while (1) {
+        LCD_ClearScreen();
+        LCD_PutString("Timer", 5);
         LCD_ShiftCursorDown();
         for(i=0;i<5;i++)
             LCD_ShiftCursorLeft();
-        LCD_PutString("00:00", 4);
-    while (1) {
-        
-        
+        sprintf(str, "%d:%d", minutes, seconds);
+        LCD_PutString(str, 12);
+        for (i = 0; i < 65000; i++);
+        if (PORTDbits.RD13 == 0){
+            work=!work;
+            for (i = 0; i < 65000; i++);
+        }
+        if(work)
+            seconds--;
+        if(seconds==0){
+            minutes--;
+            seconds=59;
+        }
+        if (PORTDbits.RD6 == 0){
+            minutes++;
+            for (i = 0; i < 65000; i++);
+        }
+        if (PORTDbits.RD7 == 0){
+            minutes+=10;
+            for (i = 0; i < 65000; i++);
+        }
         
 
     }
